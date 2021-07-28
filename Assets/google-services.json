@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1005858246666",
+    "firebase_url": "https://fiar-unity-default-rtdb.firebaseio.com",
+    "project_id": "fiar-unity",
+    "storage_bucket": "fiar-unity.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005858246666:android:87c89cb8abcc6413adcff3",
+        "android_client_info": {
+          "package_name": "com.aworld.fiar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1005858246666-h8moh5jd413a6bri9nsd7ovpeff82obn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7FVg2SyaO3TVKv7eRrfTHYO87MPHSgHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1005858246666-h8moh5jd413a6bri9nsd7ovpeff82obn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1005858246666-r9lgjhiade3rn186pfgrq2f6srugkptp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aworld.fiar"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
