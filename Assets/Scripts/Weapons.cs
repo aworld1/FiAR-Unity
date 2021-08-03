@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
 
 public class Weapons {
     public static Dictionary<string, int> Pistol = new Dictionary<string, int> {
@@ -88,7 +88,10 @@ public class Weapons {
     }
 
     public static Dictionary<string, object> CreateEquipped(Dictionary<string, object> floorWeapon) {
-        return CreateEquipped((string)floorWeapon["name"]);
+        var weapon = CreateEquipped((string)floorWeapon["name"]);
+        weapon["ammo"] = Convert.ToInt32(floorWeapon["ammo"]);
+        weapon["reserve"] = Convert.ToInt32(floorWeapon["reserve"]);
+        return weapon;
     }
 
     public static Dictionary<string, object> CreateEquipped(string nm) {

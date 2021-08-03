@@ -48,7 +48,7 @@ public class GameData {
 
     }
 
-    private async Task PrepWeapons() {
+    public async Task PrepWeapons() {
         await ServerHandler.GetRoomAttribute(RoomCode, "weapons").ContinueWith(async result => {
             var list = (List<object>)result.Result.Value;
             if (list == null) {

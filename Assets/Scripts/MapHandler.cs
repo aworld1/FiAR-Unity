@@ -20,13 +20,17 @@ public class MapHandler : MonoBehaviour {
     public GameObject nearbySample;
     public GameObject nearbyContainer;
     private int weaponSelected;
-    public static bool UpdatedNearby;
+    private static bool updatedNearby;
     private double[] prevLocs;
+    public static bool PickupUpdate;
+    private bool pickingUp;
 
     private void Start() {
         prevLocs = new[] { GPS.Instance.latitude, GPS.Instance.longitude };
         weaponSelected = 1;
-        UpdatedNearby = false;
+        updatedNearby = false;
+        pickingUp = false;
+        PickupUpdate = false;
         mapTransform = map.GetComponent<RectTransform>();
         playerTransform = player.GetComponent<RectTransform>();
         ResetWeaponObjs();
@@ -67,18 +71,22 @@ public class MapHandler : MonoBehaviour {
         primaryObj.GetComponent<Image>().color = new Color32(167, 255, 148, 255);
         secondObj.GetComponent<Outline>().effectColor = new Color32(0, 0, 0, 128);
         secondObj.GetComponent<Image>().color = new Color32(255, 255, 255, 255);
-        primaryImage.sprite = Resources.Load<Sprite>("Images/" + (string)GameHandler.Data.PrimaryWeapon["name"]);
-        secondaryImage.sprite = Resources.Load<Sprite>("Images/" + (string)GameHandler.Data.SecondaryWeapon["name"]);
+        primaryImage.sprite = Resources.Load<Sprite>("Images/" +
+                                                     (string)GameHandler.Data.PrimaryWeapon["name"]);
+        secondaryImage.sprite = Resources.Load<Sprite>("Images/" +
+                                                       (string)GameHandler.Data.SecondaryWeapon["name"]);
     }
 
     private void HandleWeapons() {
         if (GPS.Instance.latitude == 0 && GPS.Instance.longitude == 0) {
-            return;
+            //return;
         }
-        const double tolerance = 0.0000000001;
-        if (weaponObjs.Count != GameHandler.Data.FloorWeapons.Count) {
+        const double tolerance = 1E-10;
+        if (PickupUpdate) {
             ResetWeaponObjs();
-            UpdatedNearby = false;
+            SetWeaponObjTargets();
+            updatedNearby = false;
+            PickupUpdate = false;
         }
         else if (Math.Abs(prevLocs[0] - GPS.Instance.latitude) > tolerance ||
             Math.Abs(prevLocs[1] - GPS.Instance.longitude) > tolerance) {
@@ -89,22 +97,19 @@ public class MapHandler : MonoBehaviour {
                 SetWeaponObjTargets();
             }
             prevLocs = new[] { GPS.Instance.latitude, GPS.Instance.longitude };
-            UpdatedNearby = false;
+            updatedNearby = false;
         }
         else {
             MoveWeaponObjs();
         }
-        ShowWeapons();
+        ShowFloorWeapons();
     }
 
     private void ResetWeaponObjs() {
         weaponObjs = new List<WeaponObject>();
-        if (prevLocs[0] == 0 && prevLocs[1] == 0) {
-            return;
-        }
         foreach (var t in GameHandler.Data.FloorWeapons) {
-            t["lat"] = double.Parse(t["lat"].ToString());
-            t["long"] = double.Parse(t["long"].ToString());
+            t["lat"] = Double.Parse(t["lat"].ToString(), System.Globalization.NumberStyles.Float);
+            t["long"] = Double.Parse(t["long"].ToString(), System.Globalization.NumberStyles.Float);
             var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
                 new[] {(double)t["lat"], (double)t["long"]}, (double)GameHandler.Data.Size / 2);
             weaponObjs.Add(new WeaponObject((string)t["name"], pos[0], pos[1],
@@ -127,14 +132,15 @@ public class MapHandler : MonoBehaviour {
         }
     }
 
-    private void ShowWeapons() {
+    private void ShowFloorWeapons() {
         foreach (var t in weaponObjs) {
             if (math.abs(t.CurrentPos[0]) > 1 || math.abs(t.CurrentPos[1]) > 1) {
                 continue;
             }
             var weapon = Instantiate(weaponSample, weaponsContainer.transform, true);
             var img = "dot";
-            if (math.sqrt(math.pow(t.CurrentPos[0], 2) + math.pow(t.CurrentPos[1], 2)) < 0.7) {
+            if (math.sqrt(math.pow(t.CurrentPos[0], 2) + math.pow(t.CurrentPos[1], 2))
+                < ServerHandler.RevealWeaponRange) {
                 img = t.Name;
             }
             else {
@@ -149,7 +155,7 @@ public class MapHandler : MonoBehaviour {
     }
 
     private void ShowNearbyWeapons() {
-        if (UpdatedNearby) {
+        if (updatedNearby) {
             return;
         }
         foreach(Transform child in nearbyContainer.transform) {
@@ -169,11 +175,14 @@ public class MapHandler : MonoBehaviour {
             weapon.transform.GetChild(0).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/" + weaponObjs[i].Name);
             numWeapons++;
         }
-        UpdatedNearby = true;
+        updatedNearby = true;
     }
 
-    public void NearbyResponse(int i) {
-        GameHandler.PickupWeapon(i, weaponSelected - 1);
+    public async void NearbyResponse(int i) {
+        if (pickingUp) return;
+        pickingUp = true;
+        await GameHandler.PickupWeapon(i, weaponSelected - 1);
+        pickingUp = false;
     }
 }
 

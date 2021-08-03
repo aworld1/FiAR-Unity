@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -20,6 +22,7 @@ public class GameHandler : MonoBehaviour {
     public TMP_Text healthPoints;
     private void Start() {
         roomText.text = Data.RoomCode ?? "N/A";
+        ServerHandler.SubscribeToEvents(Data.RoomCode);
         if (Data.PrimaryWeapon != null) {
             ShowUI();
         }
@@ -73,6 +76,12 @@ public class GameHandler : MonoBehaviour {
             SwitchWeapon();
         }
     }
+    
+    public void MapResponse() {
+        if (!(bool)Data.PrimaryWeapon["reloading"]) {
+            SceneHandler.SwitchScene("Map Page");
+        }
+    }
 
     private static bool FireWeapon() {
         if (!RangedEquipped()) {
@@ -120,16 +129,25 @@ public class GameHandler : MonoBehaviour {
         Data.SecondaryWeapon = temp;
     }
 
-    public static async void PickupWeapon(int index, int slot) {
+    public static async Task PickupWeapon(int index, int slot) {
+        Data.FloorWeapons[index]["lat"] = Convert.ToDouble(Data.FloorWeapons[index]["lat"]);
+        Data.FloorWeapons[index]["long"] = Convert.ToDouble(Data.FloorWeapons[index]["long"]);
         var weapons = new[] { Data.PrimaryWeapon, Data.SecondaryWeapon };
         var droppedWeapon = Weapons.CreateWeapon(
             weapons[slot], (double)Data.FloorWeapons[index]["lat"], (double)Data.FloorWeapons[index]["long"]);
-        if (slot == 0) {
-            Data.PrimaryWeapon = Weapons.CreateEquipped(Data.FloorWeapons[index]);
-        }
-        else {
-            Data.SecondaryWeapon = Weapons.CreateEquipped(Data.FloorWeapons[index]);
-        }
-        await ServerHandler.PickupWeapon(Data.RoomCode, Data.FloorWeapons[index], droppedWeapon);
+        var pickup = Data.FloorWeapons[index];
+        await ServerHandler.PickupWeapon(Data.RoomCode, pickup,
+            droppedWeapon).ContinueWith(
+            result => {
+                if (!result.Result) {
+                    return;
+                }
+                if (slot == 0) {
+                    Data.PrimaryWeapon = Weapons.CreateEquipped(pickup);
+                }
+                else {
+                    Data.SecondaryWeapon = Weapons.CreateEquipped(pickup);
+                }
+            });
     }
 }
