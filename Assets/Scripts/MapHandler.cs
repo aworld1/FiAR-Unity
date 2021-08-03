@@ -24,6 +24,7 @@ public class MapHandler : MonoBehaviour {
     private double[] prevLocs;
     public static bool PickupUpdate;
     private bool pickingUp;
+    private bool firstAwake;
 
     private void Start() {
         prevLocs = new[] { GPS.Instance.latitude, GPS.Instance.longitude };
@@ -34,6 +35,10 @@ public class MapHandler : MonoBehaviour {
         mapTransform = map.GetComponent<RectTransform>();
         playerTransform = player.GetComponent<RectTransform>();
         ResetWeaponObjs();
+    }
+
+    private void Awake() {
+        firstAwake = true;
     }
 
     private void Update() {
@@ -88,7 +93,7 @@ public class MapHandler : MonoBehaviour {
             updatedNearby = false;
             PickupUpdate = false;
         }
-        else if (Math.Abs(prevLocs[0] - GPS.Instance.latitude) > tolerance ||
+        else if (firstAwake || Math.Abs(prevLocs[0] - GPS.Instance.latitude) > tolerance ||
             Math.Abs(prevLocs[1] - GPS.Instance.longitude) > tolerance) {
             if (prevLocs[0] == 0 && prevLocs[1] == 0) {
                 ResetWeaponObjs();
@@ -98,6 +103,7 @@ public class MapHandler : MonoBehaviour {
             }
             prevLocs = new[] { GPS.Instance.latitude, GPS.Instance.longitude };
             updatedNearby = false;
+            firstAwake = false;
         }
         else {
             MoveWeaponObjs();

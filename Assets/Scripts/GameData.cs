@@ -25,7 +25,7 @@ public class GameData {
         Kills = 0;
         Deaths = 0;
         PrimaryWeapon = Weapons.CreateEquipped("Pistol");
-        SecondaryWeapon = Weapons.CreateEquipped("Shotgun");
+        SecondaryWeapon = Weapons.CreateEquipped("Fist");
     }
 
     public async Task SetupDeathmatch() {
