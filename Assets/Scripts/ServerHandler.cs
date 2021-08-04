@@ -82,13 +82,13 @@ public static class ServerHandler {
                 hitPlayer = "";
                 var gyro = (Input.compass.trueHeading + new Random().Next(0, 1000) / 500d
                     * (int) weapon["inaccuracy"] -
-                    (int) weapon["inaccuracy"] + 360) % 360;
+                    (int) weapon["inaccuracy"] + 540) % 360;
                 var smallestDistance = (int) weapon["range"] + 1;
                 foreach (var t in GameHandler.Data.PlayerInfo) {
                     var pl = (Dictionary<string, object>) t.Value;
                     if (t.Key == GameHandler.Data.PlayerName || pl["team"].ToString() == GameHandler.Data.Team) continue;
                     var a = (GPS.AngleBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
-                        Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"])) + 90) % 360;
+                        Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"])) + 360) % 360;
                     var d = GPS.DistanceBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
                         Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
                     var acceptableMiss = MaxMissMargin - Math.Pow(d / (int) weapon["range"], 2) * MaxMissMargin;

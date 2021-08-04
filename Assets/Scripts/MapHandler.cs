@@ -62,7 +62,7 @@ public class MapHandler : MonoBehaviour {
     private void ShowPlayer() {
         player.transform.SetParent(map.transform);
         playerTransform.anchoredPosition = new Vector2(0, 0);
-        playerTransform.transform.eulerAngles = Vector3.forward * -Input.compass.trueHeading;
+        playerTransform.transform.eulerAngles = Vector3.forward * -((Input.compass.trueHeading + 270) % 360);
     }
 
     public void SetSelectedWeapon(int num) {
