@@ -31,10 +31,15 @@ public static class UIHandler {
             var time = GPS.CurrentTime() - (int) GameHandler.Data.PrimaryWeapon["reloadStart"];
             if (time >= (int)GameHandler.Data.PrimaryWeapon["reload"]) {
                 GameHandler.ReloadWeapon();
-                if ((string) GameHandler.Data.PrimaryWeapon["name"] == "Shotgun" && !GameHandler.FullAmmo() && !GameHandler.EmptyReserve()) {
+                if ((string) GameHandler.Data.PrimaryWeapon["name"] == "Shotgun" &&
+                    !GameHandler.FullAmmo() && !GameHandler.EmptyReserve()) {
                     GameHandler.Data.PrimaryWeapon["reloadStart"] = GPS.CurrentTime();
+                    PlayAudio(GameHandler.StaticAudio, "Reload/Shotgun");
                 }
                 else {
+                    if ((string) GameHandler.Data.PrimaryWeapon["name"] == "Shotgun") {
+                        PlayAudio(GameHandler.StaticAudio, "Reload/ShotgunPump");
+                    }
                     GameHandler.Data.PrimaryWeapon["reloading"] = false;
                 }
             }

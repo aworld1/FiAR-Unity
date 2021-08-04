@@ -110,7 +110,7 @@ public class MapHandler : MonoBehaviour {
 
     private void HandleWeapons() {
         if (GPS.Instance.latitude == 0 && GPS.Instance.longitude == 0) {
-            //return;
+            return;
         }
         const double tolerance = 1E-10;
         if (PickupUpdate) {

@@ -8,6 +8,7 @@ public class GameHandler : MonoBehaviour {
     public static readonly GameData Data = new GameData();
 
     public new AudioSource audio;
+    public static AudioSource StaticAudio;
     public TMP_Text roomText;
     public Image primaryImage;
     public TMP_Text primaryAmmo;
@@ -21,6 +22,7 @@ public class GameHandler : MonoBehaviour {
     public Slider healthBar;
     public TMP_Text healthPoints;
     private void Start() {
+        StaticAudio = audio;
         roomText.text = Data.RoomCode ?? "N/A";
         ServerHandler.SubscribeToEvents(Data.RoomCode);
         if (Data.PrimaryWeapon != null) {
@@ -56,7 +58,7 @@ public class GameHandler : MonoBehaviour {
             await Data.GetPlayerInfo();
             var hit = ServerHandler.FireWeapon(Data.PrimaryWeapon);
             if (hit) {
-                UIHandler.PlayAudio(audio, "Noise/beep");
+                UIHandler.PlayAudio(audio, "Noise/success");
             }
             return;
         }
