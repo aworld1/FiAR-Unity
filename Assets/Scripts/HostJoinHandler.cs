@@ -30,12 +30,14 @@ public class HostJoinHandler : MonoBehaviour {
             code = result.Result;
         });
         var size = int.Parse(sizeString);
+        var centerLat = GPS.Instance.latitude;
+        var centerLong = GPS.Instance.longitude;
         var loc = new Dictionary<string, string> {
-            ["lat"] = GPS.Instance.latitude + "",
-            ["long"] = GPS.Instance.longitude + ""
+            ["lat"] = centerLat + "",
+            ["long"] = centerLong + ""
         };
         var weapons = new Dictionary<string, object>();
-        var weaponsArr = GetWeapons(GPS.Instance.latitude, GPS.Instance.longitude, size);
+        var weaponsArr = GetWeapons(centerLat, centerLong, size);
         for (var i = 0; i < weaponsArr.Count; i++) {
             weapons[i + ""] = weaponsArr[i];
         }
@@ -48,6 +50,7 @@ public class HostJoinHandler : MonoBehaviour {
             ["startTime"] = GPS.RealTime()
         };
         await ServerHandler.UpdateField("Rooms/" + code, dict);
+        await CreateDummyPlayers(5, code, centerLat, centerLong, size);
         switch(mode) {
             case "Deathmatch":
                 GameHandler.Data.SetupGame(code, nm, nm, loc);
@@ -172,5 +175,19 @@ public class HostJoinHandler : MonoBehaviour {
                 centerLong + GPS.MetersToLong(2 * radius * Random.value - radius)));
         }
         return weapons;
+    }
+
+    private async Task CreateDummyPlayers(int num, string code, double centerLat, double centerLong, int radius) {
+        var dict = new Dictionary<string, object>();
+        for (var i = 0; i < num; i++) {
+            dict.Add("testDummy" + i, new Dictionary<string,object> {
+                ["kills"] = 0,
+                ["deaths"] = 0,
+                ["team"] = "testDummy" + i,
+                ["lat"] = centerLat + GPS.MetersToLat(2 * radius * Random.value - radius) + "",
+                ["long"] = centerLong + GPS.MetersToLong(2 * radius * Random.value - radius) + ""
+            });
+        }
+        await ServerHandler.UpdateField("Rooms/" + code + "/players", dict);
     }
 }
