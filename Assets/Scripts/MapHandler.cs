@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,10 +26,12 @@ public class MapHandler : MonoBehaviour {
     public static bool PickupUpdate;
     private bool pickingUp;
     private bool firstAwake;
+    private bool resetting;
 
     private void Start() {
         prevLocs = new[] { GPS.Instance.latitude, GPS.Instance.longitude };
         weaponSelected = 1;
+        resetting = false;
         updatedNearby = false;
         pickingUp = false;
         PickupUpdate = false;
@@ -47,6 +50,7 @@ public class MapHandler : MonoBehaviour {
         HandleWeapons();
         ShowOwnedWeapons();
         ShowNearbyWeapons();
+        ShowEnemies();
     }
 
     private void ClearWeapons() {
@@ -63,6 +67,28 @@ public class MapHandler : MonoBehaviour {
 
     public void SetSelectedWeapon(int num) {
         weaponSelected = num;
+    }
+
+    private void ShowEnemies() {
+        foreach (var t in GameHandler.Data.PlayerInfo) {
+            if (t.Key == GameHandler.Data.PlayerName) continue;
+            var val = (Dictionary<string, object>) t.Value;
+            var lat = double.Parse(val["lat"].ToString(), System.Globalization.NumberStyles.Float);
+            var lon = double.Parse(val["long"].ToString(), System.Globalization.NumberStyles.Float);
+            var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
+                new[] {lat, lon}, (double)GameHandler.Data.Size / 2);
+            if (math.abs(pos[0]) > 1 || math.abs(pos[1]) > 1) {
+                continue;
+            }
+            var enemy = Instantiate(weaponSample, weaponsContainer.transform, true);
+            enemy.transform.localScale = new Vector3(0.7f, 0.7f, 1);
+            var rect = mapTransform.rect;
+            var scaledPos = new[] { pos[0] * rect.width / -2.2f, pos[1] * rect.height / 2.2f };
+            var comp = enemy.GetComponent<RectTransform>();
+            comp.anchoredPosition = new Vector2((float)scaledPos[0],(float)scaledPos[1]);
+            enemy.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/dot");
+            enemy.GetComponent<Image>().color = Color.red;
+        }
     }
 
     private void ShowOwnedWeapons() {
@@ -112,15 +138,19 @@ public class MapHandler : MonoBehaviour {
     }
 
     private void ResetWeaponObjs() {
+        if (resetting) return;
+        resetting = true;
         weaponObjs = new List<WeaponObject>();
-        foreach (var t in GameHandler.Data.FloorWeapons) {
-            t["lat"] = Double.Parse(t["lat"].ToString(), System.Globalization.NumberStyles.Float);
-            t["long"] = Double.Parse(t["long"].ToString(), System.Globalization.NumberStyles.Float);
+        foreach (var t in GameHandler.Data.FloorWeapons
+            .Where(t => t != null && t.ContainsKey("lat"))) {
+            t["lat"] = double.Parse(t["lat"].ToString(), System.Globalization.NumberStyles.Float);
+            t["long"] = double.Parse(t["long"].ToString(), System.Globalization.NumberStyles.Float);
             var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
                 new[] {(double)t["lat"], (double)t["long"]}, (double)GameHandler.Data.Size / 2);
             weaponObjs.Add(new WeaponObject((string)t["name"], pos[0], pos[1],
                 (double)t["lat"], (double)t["long"]));
         }
+        resetting = false;
     }
 
     private void SetWeaponObjTargets() {
@@ -184,6 +214,7 @@ public class MapHandler : MonoBehaviour {
         updatedNearby = true;
     }
 
+    // ReSharper disable once MemberCanBePrivate.Global
     public async void NearbyResponse(int i) {
         if (pickingUp) return;
         pickingUp = true;

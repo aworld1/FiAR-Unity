@@ -75,6 +75,7 @@ public class GPS : MonoBehaviour {
                         + Input.location.lastData.timestamp);*/
         latitude = Input.location.lastData.latitude;
         longitude = Input.location.lastData.longitude;
+        GameHandler.Data.PushPlayerInfo();
     }
     
     private static double LatToMeters(double lat) {
@@ -107,16 +108,19 @@ public class GPS : MonoBehaviour {
     }
     
     public static double AngleBetweenPoints(double lat1, double long1, double lat2, double long2) {
-        var dLon = (long2 - long1);
+        var dLon = long2 - long1;
 
         var y = Math.Sin(dLon) * Math.Cos(lat2);
         var x = Math.Cos(lat1) * Math.Sin(lat2) - Math.Sin(lat1)
             * Math.Cos(lat2) * Math.Cos(dLon);
-        var b = Math.Atan2(y, x);
-        b = b * 180 / Math.PI;
-        b = (b + 360) % 360;
-        b = 360 - b;
-        return b;
+
+        var bearing = Math.Atan2(y, x);
+
+        bearing = Mathf.Rad2Deg * bearing;
+        bearing = (bearing + 360) % 360;
+        bearing = 360 - bearing;
+
+        return bearing;
     }
 
     public static double DistanceBetweenPoints(double lat1, double lon1, double lat2, double lon2) {

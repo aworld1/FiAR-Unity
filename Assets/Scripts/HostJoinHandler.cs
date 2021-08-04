@@ -6,11 +6,11 @@ using TMPro;
 using Random = UnityEngine.Random;
 
 public class HostJoinHandler : MonoBehaviour {
-    // Host Page
+    [Header("Host Page")]
     public TMP_InputField roomSize;
     public TMP_Dropdown gamemode;
     
-    // Join Page
+    [Header("Join Page")]
     public TMP_InputField playerName;
     public TMP_InputField roomCode;
     public async void HostGame() {
@@ -40,7 +40,7 @@ public class HostJoinHandler : MonoBehaviour {
             weapons[i + ""] = weaponsArr[i];
         }
         var dict = new Dictionary<string, object> {
-            ["locations/" + nm] = loc,
+            ["players/" + nm] = loc,
             ["center"] = loc,
             ["gamemode"] = mode,
             ["size"] = size,
@@ -50,7 +50,7 @@ public class HostJoinHandler : MonoBehaviour {
         await ServerHandler.UpdateField("Rooms/" + code, dict);
         switch(mode) {
             case "Deathmatch":
-                GameHandler.Data.SetupGame(code, nm, loc);
+                GameHandler.Data.SetupGame(code, nm, nm, loc);
                 PrepDeathmatch();
                 break;
         }
@@ -66,8 +66,9 @@ public class HostJoinHandler : MonoBehaviour {
 
     private async void JoinDeathmatch(Dictionary<string, object> dict) {
         dict ??= new Dictionary<string, object>();
-        dict["scoreboard/" + GameHandler.Data.PlayerName + "/kills"] = 0;
-        dict["scoreboard/" + GameHandler.Data.PlayerName + "/deaths"] = 0;
+        dict["players/" + GameHandler.Data.PlayerName + "/kills"] = 0;
+        dict["players/" + GameHandler.Data.PlayerName + "/deaths"] = 0;
+        dict["players/" + GameHandler.Data.PlayerName + "/team"] = GameHandler.Data.PlayerName;
         await ServerHandler.UpdateField("Rooms/" + GameHandler.Data.RoomCode, dict);
         await GameHandler.Data.SetupDeathmatch();
         SceneHandler.SwitchScene("Deathmatch Page");
@@ -102,7 +103,7 @@ public class HostJoinHandler : MonoBehaviour {
         var stringLoc = new Dictionary<string, string> {
             ["lat"] = GPS.Instance.latitude + "", ["long"] = GPS.Instance.longitude + ""
         };
-        await ServerHandler.UpdateField("Rooms/" + code + "/locations/" + nm, loc);
+        await ServerHandler.UpdateField("Rooms/" + code + "/players/" + nm, loc);
         SetInfo(code, nm);
         var mode = "";
         await ServerHandler.GetRoomAttribute(code, "gamemode").ContinueWith(result => {
@@ -110,7 +111,7 @@ public class HostJoinHandler : MonoBehaviour {
         });
         switch(mode) {
             case "Deathmatch":
-                GameHandler.Data.SetupGame(code, nm, stringLoc);
+                GameHandler.Data.SetupGame(code, nm, nm, stringLoc);
                 JoinDeathmatch(null);
                 break;
         }

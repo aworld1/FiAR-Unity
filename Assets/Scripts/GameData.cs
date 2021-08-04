@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 public class GameData {
     public string RoomCode;
     public string PlayerName;
+    public string Team;
     public double[] Center;
     public int Size;
     public int Kills;
@@ -16,10 +17,12 @@ public class GameData {
     public List<Dictionary<string, object>> FloorWeapons;
     public Dictionary<string, object> PrimaryWeapon;
     public Dictionary<string, object> SecondaryWeapon;
+    public Dictionary<string, object> PlayerInfo;
 
-    public void SetupGame(string code, string nm, Dictionary<string, string> center) {
+    public void SetupGame(string code, string nm, string team, Dictionary<string, string> center) {
         RoomCode = code;
         PlayerName = nm;
+        Team = team;
         Center = new[] {double.Parse(center["lat"]), double.Parse(center["long"])};
         Health = 100;
         Kills = 0;
@@ -45,6 +48,7 @@ public class GameData {
             Size = int.Parse(result.Result.Value.ToString());
         });
         await PrepWeapons();
+        await GetPlayerInfo();
 
     }
 
@@ -60,5 +64,29 @@ public class GameData {
                 FloorWeapons.Add((Dictionary<string, object>) list[i]);
             }
         });
+    }
+
+    public async void PushPlayerInfo() {
+        if (GPS.CurrentTime() - ServerHandler.LastLocationUpdate < ServerHandler.LocationBuffer) return;
+        await ServerHandler.UpdateField("Rooms/" + RoomCode + "/players/" + PlayerName,
+            new Dictionary<string, object> {
+                ["kills"] = Kills,
+                ["deaths"] = Deaths,
+                ["lat"] = GPS.Instance.latitude + "",
+                ["long"] = GPS.Instance.longitude + ""
+            });
+        ServerHandler.LastLocationUpdate = GPS.CurrentTime();
+    }
+
+    public async Task GetPlayerInfo() {
+        if (GPS.CurrentTime() - ServerHandler.LastInformationPull < ServerHandler.LocationBuffer) return;
+        await ServerHandler.GetRoomAttribute(RoomCode, "players").ContinueWith(result => {
+            PlayerInfo = new Dictionary<string, object>();
+            var list = (Dictionary<string, object>)result.Result.Value;
+            foreach (var prop in list) {
+                if (!PlayerInfo.ContainsKey(prop.Key)) PlayerInfo.Add(prop.Key, prop.Value);
+            }
+        });
+        ServerHandler.LastInformationPull = GPS.CurrentTime();
     }
 }

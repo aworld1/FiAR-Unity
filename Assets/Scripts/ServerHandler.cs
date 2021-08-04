@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
+using Random = System.Random;
+#pragma warning disable 4014
 
 public static class ServerHandler {
     private static readonly DatabaseReference DataRef = FirebaseDatabase.DefaultInstance.RootReference;
@@ -11,6 +14,9 @@ public static class ServerHandler {
     public const int DeathmatchTimeLimit = 300;
     public const int PickupRange = 10;
     public const double RevealWeaponRange = 0.7;
+    public const int LocationBuffer = 3000;
+    public static double LastLocationUpdate = 0;
+    public static double LastInformationPull = 0;
 
     private static async Task<DataSnapshot> GetRoom(string room) {
         return await FirebaseDatabase.DefaultInstance
@@ -67,6 +73,47 @@ public static class ServerHandler {
         await DataRef.Child(path).UpdateChildrenAsync(content);
     }
 
+    public static bool FireWeapon(Dictionary<string, object> weapon) {
+        var hitPlayer = "";
+        if ((int) weapon["reserve"] != -1) {
+            for (var i = 0; i < (int) weapon["bullets"]; i++) {
+                var gyro = (Input.compass.trueHeading + new Random().Next(0, 1000) / 500d
+                    * (int) weapon["inaccuracy"] -
+                    (int) weapon["inaccuracy"] + 360) % 360;
+                var smallestDistance = (int) weapon["range"] + 1;
+                foreach (var t in GameHandler.Data.PlayerInfo) {
+                    var pl = (Dictionary<string, object>) t.Value;
+                    if (t.Key == GameHandler.Data.PlayerName || pl["team"].ToString() == GameHandler.Data.Team) continue;
+                    var a = (GPS.AngleBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
+                        Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"])) + 90) % 360;
+                    var d = GPS.DistanceBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
+                        Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
+                    var acceptableMiss = 90 - d / (int) weapon["range"] * 90;
+                    Debug.Log("Angle: " + a + " \nCompass: " + gyro);
+                    if (Math.Abs(a - gyro) < acceptableMiss ||
+                        Math.Abs(a - gyro) > 360 - acceptableMiss && d < smallestDistance) {
+                        Debug.Log("HIT!");
+                        hitPlayer = t.Key;
+                    }
+                }
+            }
+        }
+        else {
+            foreach (var t in GameHandler.Data.PlayerInfo) {
+                var pl = (Dictionary<string, object>) t.Value;
+                if (t.Key == GameHandler.Data.PlayerName || pl["team"].ToString() == GameHandler.Data.Team) continue;
+                var d = GPS.DistanceBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
+                    Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
+                if (d <= (int) weapon["range"]) {
+                    hitPlayer = t.Key;
+                }
+            }
+        }
+        if (hitPlayer == "") return false;
+        CreateEvent("Hit$" + hitPlayer + "$" + GameHandler.Data.PlayerName + "$" + (int) weapon["damage"]);
+        return true;
+    }
+
     public static async Task<bool> PickupWeapon(string room, Dictionary<string, object> pickup, Dictionary<string, object> drop) {
         return await await GetRoomAttribute(room, "weapons").ContinueWith(async result => {
             var snapshot = (List<object>)result.Result.Value;
@@ -94,11 +141,22 @@ public static class ServerHandler {
             await UpdateField("Rooms/" + room, new Dictionary<string, object> {
                 ["weapons"] = weapons
             });
-            await UpdateField("Rooms/" + room + "/Events", new Dictionary<string, object> {
-                [GPS.RealTime() + "" + new System.Random().Next(0, 99999)] = "WeaponUpdate"
-            });
+            CreateEvent("WeaponUpdate");
             return true;
         });
+    }
+
+    private static async Task CreateEvent(string message) {
+        var sig = GPS.RealTime() + "" + new Random().Next(0, 99999);
+        await UpdateField("Rooms/" + GameHandler.Data.RoomCode + "/Events",
+            new Dictionary<string, object> {
+                [sig] = message
+            });
+        await Task.Delay(3000);
+        await UpdateField("Rooms/" + GameHandler.Data.RoomCode + "/Events",
+            new Dictionary<string, object> {
+                [sig] = null
+            });
     }
 
     public static void SubscribeToEvents(string room) {
@@ -108,9 +166,21 @@ public static class ServerHandler {
     }
 
     private static async void EventDetected(object sender, ChildChangedEventArgs args) {
-        if ((string)args.Snapshot.Value == "WeaponUpdate") {
+        var ev = (string) args.Snapshot.Value;
+        if (ev == "WeaponUpdate") {
             await GameHandler.Data.PrepWeapons();
             MapHandler.PickupUpdate = true;
+        }
+        else if (ev.Substring(0, 3) == "Hit" && GameHandler.Data.Health > 0) {
+            var info = ev.Split('$');
+            if (info[1] != GameHandler.Data.PlayerName) return;
+            GameHandler.Data.Health -= Convert.ToInt32(info[3]);
+            if (GameHandler.Data.Health > 0) return;
+            CreateEvent("Kill");
+            GameHandler.Data.Health = 0;
+        }
+        else if (ev == "Kill") {
+            GameHandler.Data.Kills++;
         }
     }
 }

@@ -41,7 +41,7 @@ public class GameHandler : MonoBehaviour {
         UIHandler.ShowHealth(healthBar, healthPoints);
     }
 
-    public void FireResponse() {
+    public async void FireResponse() {
         if ((bool) Data.PrimaryWeapon["reloading"]) {
             Data.PrimaryWeapon["reloading"] = false;
             UIHandler.StopAudio(audio);
@@ -53,6 +53,11 @@ public class GameHandler : MonoBehaviour {
         if (FireWeapon()) {
             UIHandler.PlayAudio(audio, "Fire/" + (string)Data.PrimaryWeapon["name"]);
             Data.PrimaryWeapon["lastFired"] = GPS.CurrentTime();
+            await Data.GetPlayerInfo();
+            var hit = ServerHandler.FireWeapon(Data.PrimaryWeapon);
+            if (hit) {
+                UIHandler.PlayAudio(audio, "Noise/beep");
+            }
             return;
         }
         UIHandler.PlayAudio(audio, "Noise/empty");
