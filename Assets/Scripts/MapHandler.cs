@@ -62,7 +62,7 @@ public class MapHandler : MonoBehaviour {
     private void ShowPlayer() {
         player.transform.SetParent(map.transform);
         playerTransform.anchoredPosition = new Vector2(0, 0);
-        playerTransform.transform.eulerAngles = Vector3.forward * -((Input.compass.trueHeading + 270) % 360);
+        playerTransform.transform.eulerAngles = Vector3.forward * -Input.compass.trueHeading;
     }
 
     public void SetSelectedWeapon(int num) {
@@ -83,9 +83,9 @@ public class MapHandler : MonoBehaviour {
             var enemy = Instantiate(weaponSample, weaponsContainer.transform, true);
             enemy.transform.localScale = new Vector3(0.7f, 0.7f, 1);
             var rect = mapTransform.rect;
-            var scaledPos = new[] { pos[0] * rect.width / -2.2f, pos[1] * rect.height / 2.2f };
+            var scaledPos = new[] { pos[0] * rect.height / -2.2f, pos[1] * rect.width / 2.2f };
             var comp = enemy.GetComponent<RectTransform>();
-            comp.anchoredPosition = new Vector2((float)scaledPos[0],(float)scaledPos[1]);
+            comp.anchoredPosition = new Vector2((float)scaledPos[1],(float)scaledPos[0]);
             enemy.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/dot");
             enemy.GetComponent<Image>().color = Color.red;
         }
@@ -183,9 +183,9 @@ public class MapHandler : MonoBehaviour {
                 weapon.transform.localScale = new Vector3(0.3f, 0.3f, 1);
             }
             var rect = mapTransform.rect;
-            var scaledPos = new[] { t.CurrentPos[0] * rect.width / -2.2f, t.CurrentPos[1] * rect.height / 2.2f };
+            var scaledPos = new[] { t.CurrentPos[0] * rect.height / -2.2f, t.CurrentPos[1] * rect.width / 2.2f };
             var comp = weapon.GetComponent<RectTransform>();
-            comp.anchoredPosition = new Vector2((float)scaledPos[0], (float)scaledPos[1]);
+            comp.anchoredPosition = new Vector2((float)scaledPos[1], (float)scaledPos[0]);
             weapon.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/" + img);
         }
     }

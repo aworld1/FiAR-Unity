@@ -118,7 +118,6 @@ public class GPS : MonoBehaviour {
 
         bearing = Mathf.Rad2Deg * bearing;
         bearing = (bearing + 360) % 360;
-        bearing = 360 - bearing;
 
         return bearing;
     }

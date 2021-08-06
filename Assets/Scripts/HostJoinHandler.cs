@@ -50,7 +50,7 @@ public class HostJoinHandler : MonoBehaviour {
             ["startTime"] = GPS.RealTime()
         };
         await ServerHandler.UpdateField("Rooms/" + code, dict);
-        await CreateDummyPlayers(5, code, centerLat, centerLong, size);
+        await CreateDummyPlayers(2, code, centerLat, centerLong, size);
         switch(mode) {
             case "Deathmatch":
                 GameHandler.Data.SetupGame(code, nm, nm, loc);
@@ -79,7 +79,7 @@ public class HostJoinHandler : MonoBehaviour {
 
     public async void JoinGame() {
         var nm = playerName.text.Trim();
-        var code = roomCode.text.Trim();
+        var code = roomCode.text.Trim().ToUpper();
         if (nm == "" || code == "") {
             Debug.Log("Empty fields!");
             return;
@@ -177,7 +177,8 @@ public class HostJoinHandler : MonoBehaviour {
         return weapons;
     }
 
-    private async Task CreateDummyPlayers(int num, string code, double centerLat, double centerLong, int radius) {
+    private static async Task CreateDummyPlayers(int num, string code, double centerLat, double centerLong, int radius) {
+        if (string.IsNullOrEmpty(code)) return;
         var dict = new Dictionary<string, object>();
         for (var i = 0; i < num; i++) {
             dict.Add("testDummy" + i, new Dictionary<string,object> {
