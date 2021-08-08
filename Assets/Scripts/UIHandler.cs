@@ -27,7 +27,18 @@ public static class UIHandler {
         var fill = 1f;
         var color = Color.black;
         color.a = 0.5f;
-        if ((bool) GameHandler.Data.PrimaryWeapon["reloading"]) {
+        if (GameHandler.Data.Health == 0) {
+            if (GameHandler.Data.IsDead()) {
+                img = "Images/skull";
+                fill = 1 - (float) (GameHandler.Data.DeathTime - GPS.CurrentTime()) / ServerHandler.TimeToRespawn;
+                color = Color.red;
+                color.a = 0.7f;
+            }
+            else {
+                GameHandler.Data.Health = 100;
+            }
+        }
+        else if ((bool) GameHandler.Data.PrimaryWeapon["reloading"]) {
             var time = GPS.CurrentTime() - (int) GameHandler.Data.PrimaryWeapon["reloadStart"];
             if (time >= (int)GameHandler.Data.PrimaryWeapon["reload"]) {
                 GameHandler.ReloadWeapon();

@@ -52,26 +52,26 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Lean\Common\Extras\LeanSelectableBehaviour.cs" />
      <Compile Include="Assets\Lean\Common\Scripts\LeanHelper.cs" />
      <Compile Include="Assets\Lean\Common\Scripts\LeanEditor.cs" />
-     <Compile Include="Assets\Lean\Common\Extras\LeanSpawn.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanPath.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanSelect.cs" />
-     <Compile Include="Assets\Lean\Common\Scripts\LeanInspector.cs" />
      <Compile Include="Assets\Lean\Common\Documentation\LeanGuide.cs" />
      <Compile Include="Assets\Lean\Common\Examples\Scripts\LeanDemo.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanFormatString.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanSelectableGraphicColor.cs" />
      <Compile Include="Assets\Lean\Common\Examples\Scripts\LeanLinkTo.cs" />
-     <Compile Include="Assets\Lean\Common\Extras\LeanPlane.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanSelectableRendererColor.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanRoll.cs" />
-     <Compile Include="Assets\Lean\Common\Extras\LeanDestroy.cs" />
      <Compile Include="Assets\Lean\Common\Examples\Scripts\LeanUpgradeEventSystem.cs" />
-     <Compile Include="Assets\Lean\Common\Extras\LeanSelectable.cs" />
      <Compile Include="Assets\Lean\Common\Extras\LeanSelectableSpriteRendererColor.cs" />
      <Compile Include="Assets\Lean\Common\Scripts\LeanInput.cs" />
+     <Compile Include="Assets\Lean\Common\Extras\LeanSelectableBehaviour.cs" />
+     <Compile Include="Assets\Lean\Common\Extras\LeanSpawn.cs" />
+     <Compile Include="Assets\Lean\Common\Scripts\LeanInspector.cs" />
+     <Compile Include="Assets\Lean\Common\Extras\LeanPlane.cs" />
+     <Compile Include="Assets\Lean\Common\Extras\LeanDestroy.cs" />
+     <Compile Include="Assets\Lean\Common\Extras\LeanSelectable.cs" />
      <None Include="Assets\Lean\Common\LeanCommon.asmdef" />
      <None Include="Assets\Lean\Common\Examples\Fonts\OFL.txt" />
      <None Include="Assets\Lean\Common\Examples\Shaders\Object.shader" />

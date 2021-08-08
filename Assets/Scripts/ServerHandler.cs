@@ -14,10 +14,12 @@ public static class ServerHandler {
     public const int PickupRange = 10;
     public const double RevealWeaponRange = 0.7;
     public const int LocationBuffer = 3000;
+    public const int MapSize = 50;
+    public const int TimeToRespawn = 5000;
     private const int MaxMissMargin = 45;
     public static double LastLocationUpdate = 0;
     public static double LastInformationPull = 0;
-    private static bool EventSubscribed = false;
+    private static bool eventSubscribed;
 
     private static async Task<DataSnapshot> GetRoom(string room) {
         return await FirebaseDatabase.DefaultInstance
@@ -92,10 +94,8 @@ public static class ServerHandler {
                     var d = GPS.DistanceBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
                         Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
                     var acceptableMiss = MaxMissMargin - Math.Pow(d / (int) weapon["range"], 2) * MaxMissMargin;
-                    Debug.Log("Phone Compass: " + gyro + "\nDesired Angle: " + a);
                     if (Math.Abs(a - gyro) < acceptableMiss ||
                         Math.Abs(a - gyro) > 360 - acceptableMiss && d < smallestDistance) {
-                        Debug.Log("HIT!");
                         hitPlayer = t.Key;
                     }
                 }
@@ -158,16 +158,18 @@ public static class ServerHandler {
             new Dictionary<string, object> {
                 [sig] = message
             });
-        await Task.Delay(3000);
+    }
+
+    private static async Task DeleteEvent(string id) {
         await UpdateField("Rooms/" + GameHandler.Data.RoomCode + "/Events",
             new Dictionary<string, object> {
-                [sig] = null
+                [id] = null
             });
     }
 
     public static void SubscribeToEvents(string room) {
-        if (EventSubscribed) return;
-        EventSubscribed = true;
+        if (eventSubscribed) return;
+        eventSubscribed = true;
         FirebaseDatabase.DefaultInstance
             .GetReference("Rooms/" + room + "/Events")
             .ChildAdded += EventDetected;
@@ -186,12 +188,24 @@ public static class ServerHandler {
             GameHandler.Data.Health -= Convert.ToInt32(info[3]);
             if (GameHandler.Data.Health > 0) return;
             CreateEvent("Kill$" + info[2]);
-            GameHandler.Data.Health = 0;
+            GameHandler.PlayerDied();
         }
-        else if (ev.Substring(0, 4) == "Hit") {
+        else if (ev.Substring(0, 4) == "Kill") {
             var info = ev.Split('$');
             if (info[1] != GameHandler.Data.PlayerName) return;
+            UIHandler.PlayAudio(GameHandler.StaticAudio, "Noise/success");
             GameHandler.Data.Kills++;
+            if (GameHandler.Data.Kills > GameHandler.Data.LeaderKills) {
+                CreateEvent("LeaderKill$" + GameHandler.Data.Kills);
+                GameHandler.Data.LeaderKills = GameHandler.Data.Kills;
+            }
+        }
+        else if (ev.Substring(0, 10) == "LeaderKill") {
+            var info = ev.Split('$');
+            GameHandler.Data.LeaderKills = Convert.ToInt32(info[1]);
+            await UpdateField("Rooms/" + GameHandler.Data.RoomCode, new Dictionary<string, object> {
+                ["leaderKills"] = Convert.ToInt32(info[1])
+            });
         }
     }
 }

@@ -2,12 +2,14 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#pragma warning disable 108,114
 
 public class GameHandler : MonoBehaviour {
     public static readonly GameData Data = new GameData();
 
-    public new AudioSource audio;
+    public AudioSource audio;
     public static AudioSource StaticAudio;
     public TMP_Text roomText;
     public Image primaryImage;
@@ -23,6 +25,7 @@ public class GameHandler : MonoBehaviour {
     public TMP_Text healthPoints;
     private void Start() {
         StaticAudio = audio;
+        if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Map Page")) return;
         roomText.text = Data.RoomCode ?? "N/A";
         ServerHandler.SubscribeToEvents(Data.RoomCode);
         if (Data.PrimaryWeapon != null) {
@@ -31,19 +34,21 @@ public class GameHandler : MonoBehaviour {
     }
 
     private void Update() {
-        if (Data.PrimaryWeapon != null) {
+        if (Data.PrimaryWeapon != null && SceneManager.GetActiveScene() != SceneManager.GetSceneByName("Map Page")) {
             ShowUI();
         }
     }
 
     private void ShowUI() {
-        UIHandler.ShowInventory(primaryImage, primaryAmmo, secondaryImage, secondaryAmmo);
+        UIHandler.ShowInventory(primaryImage, primaryAmmo,
+            secondaryImage, secondaryAmmo);
         UIHandler.ShowUseButton(useImage, useOutline);
         UIHandler.ShowTopBar(leaderText, killsText, timeText);
         UIHandler.ShowHealth(healthBar, healthPoints);
     }
 
     public async void FireResponse() {
+        if (Data.IsDead()) return;
         if ((bool) Data.PrimaryWeapon["reloading"]) {
             Data.PrimaryWeapon["reloading"] = false;
             UIHandler.StopAudio(audio);
@@ -58,7 +63,8 @@ public class GameHandler : MonoBehaviour {
             await Data.GetPlayerInfo();
             var hit = ServerHandler.FireWeapon(Data.PrimaryWeapon);
             if (hit) {
-                UIHandler.PlayAudio(audio, "Noise/success");
+                await Task.Delay(100);
+                UIHandler.PlayAudio(audio, "Noise/hit");
             }
             return;
         }
@@ -66,7 +72,7 @@ public class GameHandler : MonoBehaviour {
     }
 
     public void ReloadResponse() {
-        if (!RangedEquipped() || FullAmmo() || (bool)Data.PrimaryWeapon["reloading"]) {
+        if (Data.IsDead() || !RangedEquipped() || FullAmmo() || (bool)Data.PrimaryWeapon["reloading"]) {
             return;
         }
         if (EmptyReserve()) {
@@ -79,13 +85,13 @@ public class GameHandler : MonoBehaviour {
     }
 
     public void SwitchResponse() {
-        if (!(bool)Data.PrimaryWeapon["reloading"]) {
+        if (!Data.IsDead() && !(bool)Data.PrimaryWeapon["reloading"]) {
             SwitchWeapon();
         }
     }
     
     public void MapResponse() {
-        if (!(bool)Data.PrimaryWeapon["reloading"]) {
+        if (!Data.IsDead() && !(bool)Data.PrimaryWeapon["reloading"]) {
             SceneHandler.SwitchScene("Map Page");
         }
     }
@@ -156,5 +162,15 @@ public class GameHandler : MonoBehaviour {
                     Data.SecondaryWeapon = Weapons.CreateEquipped(pickup);
                 }
             });
+    }
+
+    public static void PlayerDied() {
+        Data.PrimaryWeapon["reloading"] = false;
+        Data.SecondaryWeapon["reloading"] = false;
+        UIHandler.StopAudio(StaticAudio);
+        Data.Deaths++;
+        Data.Health = 0;
+        Data.DeathTime = GPS.CurrentTime() + ServerHandler.TimeToRespawn;
+        SceneHandler.SwitchScene("Deathmatch Page");
     }
 }

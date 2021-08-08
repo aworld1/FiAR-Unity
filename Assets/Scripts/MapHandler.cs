@@ -76,7 +76,7 @@ public class MapHandler : MonoBehaviour {
             var lat = double.Parse(val["lat"].ToString(), System.Globalization.NumberStyles.Float);
             var lon = double.Parse(val["long"].ToString(), System.Globalization.NumberStyles.Float);
             var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
-                new[] {lat, lon}, (double)GameHandler.Data.Size / 2);
+                new[] {lat, lon}, ServerHandler.MapSize);
             if (math.abs(pos[0]) > 1 || math.abs(pos[1]) > 1) {
                 continue;
             }
@@ -146,7 +146,7 @@ public class MapHandler : MonoBehaviour {
             t["lat"] = double.Parse(t["lat"].ToString(), System.Globalization.NumberStyles.Float);
             t["long"] = double.Parse(t["long"].ToString(), System.Globalization.NumberStyles.Float);
             var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
-                new[] {(double)t["lat"], (double)t["long"]}, (double)GameHandler.Data.Size / 2);
+                new[] {(double)t["lat"], (double)t["long"]}, ServerHandler.MapSize);
             weaponObjs.Add(new WeaponObject((string)t["name"], pos[0], pos[1],
                 (double)t["lat"], (double)t["long"]));
         }
@@ -156,7 +156,7 @@ public class MapHandler : MonoBehaviour {
     private void SetWeaponObjTargets() {
         foreach (var t in weaponObjs) {
             var pos = GPS.GetRelativeMapPosition(new[] {GPS.Instance.latitude, GPS.Instance.longitude},
-                new[] {t.RealPos[0], t.RealPos[1]}, (double)GameHandler.Data.Size / 2);
+                new[] {t.RealPos[0], t.RealPos[1]}, ServerHandler.MapSize);
             t.TargetPos = new[] { pos[0], pos[1] };
         }
     }

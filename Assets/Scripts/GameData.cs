@@ -14,6 +14,7 @@ public class GameData {
     public int Health;
     public int StartTime;
     public int TimeLimit;
+    public int DeathTime;
     public List<Dictionary<string, object>> FloorWeapons;
     public Dictionary<string, object> PrimaryWeapon;
     public Dictionary<string, object> SecondaryWeapon;
@@ -27,6 +28,7 @@ public class GameData {
         Health = 100;
         Kills = 0;
         Deaths = 0;
+        DeathTime = 0;
         PrimaryWeapon = Weapons.CreateEquipped("Pistol");
         SecondaryWeapon = Weapons.CreateEquipped("Fist");
     }
@@ -88,5 +90,9 @@ public class GameData {
             }
         });
         ServerHandler.LastInformationPull = GPS.CurrentTime();
+    }
+
+    public bool IsDead() {
+        return DeathTime > GPS.CurrentTime();
     }
 }

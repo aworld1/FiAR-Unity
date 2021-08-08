@@ -50,7 +50,7 @@ public class HostJoinHandler : MonoBehaviour {
             ["startTime"] = GPS.RealTime()
         };
         await ServerHandler.UpdateField("Rooms/" + code, dict);
-        await CreateDummyPlayers(2, code, centerLat, centerLong, size);
+        await CreateDummyPlayers(3, code, centerLat, centerLong, size);
         switch(mode) {
             case "Deathmatch":
                 GameHandler.Data.SetupGame(code, nm, nm, loc);

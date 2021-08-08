@@ -1121,6 +1121,7 @@ GameObject:
   - component: {fileID: 1377078385}
   - component: {fileID: 1377078386}
   - component: {fileID: 1377078387}
+  - component: {fileID: 1377078388}
   m_Layer: 0
   m_Name: ScriptHandler
   m_TagString: Untagged
@@ -1190,6 +1191,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   latitude: 0
   longitude: 0
+--- !u!114 &1377078388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377078383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c0404c9b5408c44f8c5077a387f4d6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audio: {fileID: 1178388957}
+  roomText: {fileID: 0}
+  primaryImage: {fileID: 0}
+  primaryAmmo: {fileID: 0}
+  secondaryImage: {fileID: 0}
+  secondaryAmmo: {fileID: 0}
+  useImage: {fileID: 0}
+  useOutline: {fileID: 0}
+  leaderText: {fileID: 0}
+  killsText: {fileID: 0}
+  timeText: {fileID: 0}
+  healthBar: {fileID: 0}
+  healthPoints: {fileID: 0}
 --- !u!1 &1398345927
 GameObject:
   m_ObjectHideFlags: 0
