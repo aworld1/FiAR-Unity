@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using TMPro;
@@ -23,6 +24,7 @@ public class GameHandler : MonoBehaviour {
     public TMP_Text timeText;
     public Slider healthBar;
     public TMP_Text healthPoints;
+    public GameObject scopeButton;
     private void Start() {
         StaticAudio = audio;
         if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Map Page")) return;
@@ -40,11 +42,12 @@ public class GameHandler : MonoBehaviour {
     }
 
     private void ShowUI() {
-        UIHandler.ShowInventory(primaryImage, primaryAmmo,
+        UIHandler.ShowInventory(primaryImage, primaryAmmo, 
             secondaryImage, secondaryAmmo);
         UIHandler.ShowUseButton(useImage, useOutline);
         UIHandler.ShowTopBar(leaderText, killsText, timeText);
         UIHandler.ShowHealth(healthBar, healthPoints);
+        UIHandler.HandleScopedWeapons(scopeButton);
     }
 
     public async void FireResponse() {
@@ -88,6 +91,14 @@ public class GameHandler : MonoBehaviour {
         if (!Data.IsDead() && !(bool)Data.PrimaryWeapon["reloading"]) {
             SwitchWeapon();
         }
+    }
+
+    public void ScopedResponse() {
+        Data.Scoped = true;
+    }
+
+    public void UnscopedResponse() {
+        Data.Scoped = false;
     }
     
     public void MapResponse() {
@@ -172,5 +183,23 @@ public class GameHandler : MonoBehaviour {
         Data.Health = 0;
         Data.DeathTime = GPS.CurrentTime() + ServerHandler.TimeToRespawn;
         SceneHandler.SwitchScene("Deathmatch Page");
+    }
+
+    public static double ClosestAngle() {
+        var gyro = Input.compass.trueHeading;
+        var closestAngle = 180d;
+        foreach (var t in Data.PlayerInfo) {
+            var pl = (Dictionary<string, object>) t.Value;
+            if (t.Key == Data.PlayerName || pl["team"].ToString() == Data.Team) continue;
+            var a = GPS.AngleBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
+                Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
+            var d = GPS.DistanceBetweenPoints(GPS.Instance.latitude, GPS.Instance.longitude,
+                Convert.ToDouble(pl["lat"]), Convert.ToDouble(pl["long"]));
+            var floorAngle = Math.Min(Math.Abs(gyro - a), 360 - Math.Abs(gyro - a));
+            if (floorAngle < closestAngle && d <= (int) Data.PrimaryWeapon["range"]) {
+                closestAngle = floorAngle;
+            }
+        }
+        return closestAngle;
     }
 }

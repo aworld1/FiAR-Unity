@@ -15,6 +15,7 @@ public class GameData {
     public int StartTime;
     public int TimeLimit;
     public int DeathTime;
+    public bool Scoped;
     public List<Dictionary<string, object>> FloorWeapons;
     public Dictionary<string, object> PrimaryWeapon;
     public Dictionary<string, object> SecondaryWeapon;
@@ -30,7 +31,7 @@ public class GameData {
         Deaths = 0;
         DeathTime = 0;
         PrimaryWeapon = Weapons.CreateEquipped("Pistol");
-        SecondaryWeapon = Weapons.CreateEquipped("Fist");
+        SecondaryWeapon = Weapons.CreateEquipped("Sniper");
     }
 
     public async Task SetupDeathmatch() {

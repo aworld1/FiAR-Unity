@@ -3,6 +3,18 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public static class UIHandler {
+    
+    private static int lastScopeBeep;
+    
+    public static void HandleScopedWeapons(GameObject scope) {
+        var scoped = (string) GameHandler.Data.PrimaryWeapon["name"] == "Sniper";
+        scope.SetActive(scoped);
+        var closestAngle = GameHandler.ClosestAngle();
+        if (!scoped || !GameHandler.Data.Scoped ||
+            GPS.CurrentTime() - lastScopeBeep < 100 + 2000 * closestAngle / 180) return;
+        PlayAudio(GameHandler.StaticAudio, "Noise/beep");
+        lastScopeBeep = GPS.CurrentTime();
+    }
 
     public static void ShowInventory(Image primary, TMP_Text primaryText,
         Image secondary, TMP_Text secondaryText) {
@@ -15,7 +27,7 @@ public static class UIHandler {
             primaryText.text = "∞";
         }
         if ((int) GameHandler.Data.SecondaryWeapon["reserve"] != -1) {
-            secondaryText.text = GameHandler.Data.SecondaryWeapon["ammo"] +" / " + GameHandler.Data.SecondaryWeapon["reserve"];
+            secondaryText.text = GameHandler.Data.SecondaryWeapon["ammo"] + " / " + GameHandler.Data.SecondaryWeapon["reserve"];
         }
         else {
             secondaryText.text = "∞";
